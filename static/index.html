@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agenda Ótima com Programação Dinâmica</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="top-panel">
+        <div>
+          <p class="eyebrow">Weighted Interval Scheduling</p>
+          <h1>Otimizador de Agenda</h1>
+          <p class="summary">
+            Cadastre atividades com horário e peso. O algoritmo escolhe a melhor combinação sem conflitos e maximiza o peso total.
+          </p>
+        </div>
+        <div class="scoreboard" aria-live="polite">
+          <span>Peso ótimo</span>
+          <strong id="totalWeight">0</strong>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="editor-panel">
+          <div class="panel-header">
+            <h2>Atividades</h2>
+            <button class="ghost-button" id="sampleButton" type="button">Exemplo</button>
+          </div>
+
+          <form id="activityForm" class="activity-form">
+            <label>
+              Nome
+              <input id="nameInput" name="name" type="text" placeholder="Projeto PI" required />
+            </label>
+            <label>
+              Início
+              <input id="startInput" name="start" type="time" required />
+            </label>
+            <label>
+              Fim
+              <input id="endInput" name="end" type="time" required />
+            </label>
+            <label>
+              Peso
+              <input id="weightInput" name="weight" type="number" min="0" step="1" value="5" required />
+            </label>
+            <button class="primary-button" type="submit">Adicionar</button>
+          </form>
+
+          <div id="errorBox" class="error-box" hidden></div>
+          <div id="activityList" class="activity-list"></div>
+        </div>
+
+        <div class="result-panel">
+          <div class="panel-header">
+            <h2>Agenda escolhida</h2>
+            <div class="method-status" id="methodStatus">Iterativo e recursivo</div>
+          </div>
+          <div id="selectedTimeline" class="timeline empty-state">
+            Adicione atividades para calcular a agenda ótima.
+          </div>
+        </div>
+      </section>
+
+      <section class="details-panel">
+        <div class="panel-header">
+          <h2>Tabela DP</h2>
+          <span class="caption">M[i] = maior peso considerando as i primeiras atividades ordenadas pelo fim</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>i</th>
+                <th>Atividade</th>
+                <th>p(i)</th>
+                <th>Inclui</th>
+                <th>Exclui</th>
+                <th>M[i]</th>
+              </tr>
+            </thead>
+            <tbody id="dpTable">
+              <tr>
+                <td colspan="6">Nenhum cálculo executado.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
