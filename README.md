@@ -53,3 +53,6 @@ static/style.css    Estilos da interface
 static/app.js       Lógica do front e chamadas para a API
 tests/              Testes unitários
 ```
+
+### Link da gravação
+https://drive.google.com/file/d/1HcUaEchlBRQySI9R9zUVAx2IXp24XBBs/view?usp=sharing
