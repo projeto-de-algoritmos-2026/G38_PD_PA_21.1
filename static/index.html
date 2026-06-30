@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agenda Ótima com Programação Dinâmica</title>
+    <title>Programação Dinâmica: Agenda e Knapsack</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
@@ -11,82 +11,166 @@
       <section class="top-panel">
         <div>
           <p class="eyebrow">Weighted Interval Scheduling</p>
-          <h1>Otimizador de Agenda</h1>
+          <h1>Laboratório de Programação Dinâmica</h1>
           <p class="summary">
-            Cadastre atividades com horário e peso. O algoritmo escolhe a melhor combinação sem conflitos e maximiza o peso total.
+            Use a aba de agenda para resolver atividades com conflito de horários ou a aba de knapsack para escolher itens sob uma capacidade limitada.
           </p>
         </div>
         <div class="scoreboard" aria-live="polite">
-          <span>Peso ótimo</span>
+          <span id="scoreboardLabel">Peso ótimo</span>
           <strong id="totalWeight">0</strong>
         </div>
       </section>
 
-      <section class="workspace">
-        <div class="editor-panel">
-          <div class="panel-header">
-            <h2>Atividades</h2>
-            <button class="ghost-button" id="sampleButton" type="button">Exemplo</button>
-          </div>
-
-          <form id="activityForm" class="activity-form">
-            <label>
-              Nome
-              <input id="nameInput" name="name" type="text" placeholder="Projeto PI" required />
-            </label>
-            <label>
-              Início
-              <input id="startInput" name="start" type="time" required />
-            </label>
-            <label>
-              Fim
-              <input id="endInput" name="end" type="time" required />
-            </label>
-            <label>
-              Peso
-              <input id="weightInput" name="weight" type="number" min="0" step="1" value="5" required />
-            </label>
-            <button class="primary-button" type="submit">Adicionar</button>
-          </form>
-
-          <div id="errorBox" class="error-box" hidden></div>
-          <div id="activityList" class="activity-list"></div>
-        </div>
-
-        <div class="result-panel">
-          <div class="panel-header">
-            <h2>Agenda escolhida</h2>
-            <div class="method-status" id="methodStatus">Iterativo e recursivo</div>
-          </div>
-          <div id="selectedTimeline" class="timeline empty-state">
-            Adicione atividades para calcular a agenda ótima.
-          </div>
-        </div>
+      <section class="tab-bar" role="tablist" aria-label="Algoritmos">
+        <button class="tab-button is-active" id="scheduleTabButton" type="button" role="tab" aria-selected="true" aria-controls="scheduleView" data-tab-target="schedule">Agenda</button>
+        <button class="tab-button" id="knapsackTabButton" type="button" role="tab" aria-selected="false" aria-controls="knapsackView" data-tab-target="knapsack">Knapsack</button>
       </section>
 
-      <section class="details-panel">
-        <div class="panel-header">
-          <h2>Tabela DP</h2>
-          <span class="caption">M[i] = maior peso considerando as i primeiras atividades ordenadas pelo fim</span>
+      <section class="workspace">
+        <div class="algorithm-view" id="scheduleView" data-tab-panel="schedule">
+          <div class="editor-panel">
+            <div class="panel-header">
+              <h2>Atividades</h2>
+              <button class="ghost-button" id="scheduleSampleButton" type="button">Exemplo</button>
+            </div>
+
+            <form id="activityForm" class="activity-form">
+              <label>
+                Nome
+                <input id="nameInput" name="name" type="text" placeholder="Projeto PI" required />
+              </label>
+              <label>
+                Início
+                <input id="startInput" name="start" type="time" required />
+              </label>
+              <label>
+                Fim
+                <input id="endInput" name="end" type="time" required />
+              </label>
+              <label>
+                Peso
+                <input id="weightInput" name="weight" type="number" min="0" step="1" value="5" required />
+              </label>
+              <button class="primary-button" type="submit">Adicionar</button>
+            </form>
+
+            <div id="scheduleErrorBox" class="error-box" hidden></div>
+            <div id="activityList" class="activity-list"></div>
+          </div>
+
+          <div class="result-panel">
+            <div class="panel-header">
+              <h2>Agenda escolhida</h2>
+              <div class="method-status" id="scheduleMethodStatus">Iterativo e recursivo</div>
+            </div>
+            <div id="selectedTimeline" class="timeline empty-state">
+              Adicione atividades para calcular a agenda ótima.
+            </div>
+          </div>
+
+          <div class="details-panel">
+            <div class="panel-header">
+              <h2>Tabela DP</h2>
+              <span class="caption">M[i] = maior peso considerando as i primeiras atividades ordenadas pelo fim</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>i</th>
+                    <th>Atividade</th>
+                    <th>p(i)</th>
+                    <th>Inclui</th>
+                    <th>Exclui</th>
+                    <th>M[i]</th>
+                  </tr>
+                </thead>
+                <tbody id="dpTable">
+                  <tr>
+                    <td colspan="6">Nenhum cálculo executado.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>i</th>
-                <th>Atividade</th>
-                <th>p(i)</th>
-                <th>Inclui</th>
-                <th>Exclui</th>
-                <th>M[i]</th>
-              </tr>
-            </thead>
-            <tbody id="dpTable">
-              <tr>
-                <td colspan="6">Nenhum cálculo executado.</td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div class="algorithm-view" id="knapsackView" data-tab-panel="knapsack" hidden>
+          <div class="editor-panel">
+            <div class="panel-header">
+              <h2>Itens</h2>
+              <button class="ghost-button" id="knapsackSampleButton" type="button">Exemplo</button>
+            </div>
+
+            <form id="knapsackForm" class="knapsack-form">
+              <label>
+                Nome
+                <input id="itemNameInput" name="name" type="text" placeholder="Notebook" required />
+              </label>
+              <label>
+                Peso
+                <input id="itemWeightInput" name="weight" type="number" min="1" step="1" value="1" required />
+              </label>
+              <label>
+                Valor
+                <input id="itemValueInput" name="value" type="number" min="0" step="1" value="1" required />
+              </label>
+              <label>
+                Capacidade
+                <input id="capacityInput" name="capacity" type="number" min="1" step="1" value="10" required />
+              </label>
+              <button class="primary-button" type="submit">Adicionar</button>
+            </form>
+
+            <div id="knapsackErrorBox" class="error-box" hidden></div>
+            <div id="knapsackList" class="activity-list"></div>
+          </div>
+
+          <div class="result-panel">
+            <div class="panel-header">
+              <h2>Itens escolhidos</h2>
+              <div class="method-status" id="knapsackMethodStatus">Programação dinâmica iterativa</div>
+            </div>
+            <div class="knapsack-summary">
+              <div class="scoreboard scoreboard-compact">
+                <span>Valor ótimo</span>
+                <strong id="knapsackTotalValue">0</strong>
+              </div>
+              <div class="scoreboard scoreboard-compact">
+                <span>Peso usado</span>
+                <strong id="knapsackTotalWeight">0</strong>
+              </div>
+            </div>
+            <div id="knapsackSelected" class="timeline empty-state">
+              Adicione itens e uma capacidade para calcular a mochila ótima.
+            </div>
+          </div>
+
+          <div class="details-panel">
+            <div class="panel-header">
+              <h2>Tabela DP</h2>
+              <span class="caption">V[i][c] = melhor valor usando os i primeiros itens e capacidade c</span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="knapsackTableHead">
+                  <tr>
+                    <th>i</th>
+                    <th>Item</th>
+                    <th>Peso</th>
+                    <th>Valor</th>
+                    <th>0</th>
+                  </tr>
+                </thead>
+                <tbody id="knapsackTableBody">
+                  <tr>
+                    <td colspan="5">Nenhum cálculo executado.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
     </main>

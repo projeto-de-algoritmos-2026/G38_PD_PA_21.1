@@ -1,6 +1,6 @@
 import unittest
 
-from app import optimize_schedule, parse_time
+from app import optimize_knapsack, optimize_schedule, parse_time
 
 
 class SchedulerTests(unittest.TestCase):
@@ -31,6 +31,30 @@ class SchedulerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             optimize_schedule(
                 [{"id": "a1", "name": "A", "start": "10:00", "end": "09:00", "weight": 1}]
+            )
+
+    def test_knapsack_dynamic_programming(self):
+        result = optimize_knapsack(
+            [
+                {"id": "k1", "name": "A", "weight": 5, "value": 10},
+                {"id": "k2", "name": "B", "weight": 4, "value": 40},
+                {"id": "k3", "name": "C", "weight": 6, "value": 30},
+                {"id": "k4", "name": "D", "weight": 3, "value": 50},
+            ],
+            10,
+        )
+
+        selected_names = [item["name"] for item in result["iterative"]["selected"]]
+        self.assertEqual(result["capacity"], 10)
+        self.assertEqual(result["iterative"]["totalValue"], 90)
+        self.assertEqual(result["iterative"]["totalWeight"], 7)
+        self.assertEqual(selected_names, ["B", "D"])
+
+    def test_rejects_invalid_knapsack_capacity(self):
+        with self.assertRaises(ValueError):
+            optimize_knapsack(
+                [{"id": "k1", "name": "A", "weight": 1, "value": 1}],
+                0,
             )
 
 

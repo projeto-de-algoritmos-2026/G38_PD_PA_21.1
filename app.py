@@ -25,6 +25,14 @@ class Activity:
     end_minutes: int
 
 
+@dataclass(frozen=True)
+class KnapsackItem:
+    id: str
+    name: str
+    weight: int
+    value: int
+
+
 def parse_time(value: str) -> int:
     try:
         hour_text, minute_text = value.split(":", 1)
@@ -215,6 +223,117 @@ def serialize_activity(activity: Activity) -> dict[str, Any]:
     return data
 
 
+def validate_knapsack_items(raw_items: list[dict[str, Any]]) -> list[KnapsackItem]:
+    if not raw_items:
+        raise ValueError("Cadastre ao menos um item.")
+
+    items: list[KnapsackItem] = []
+    seen_ids: set[str] = set()
+
+    for index, raw in enumerate(raw_items, start=1):
+        item_id = str(raw.get("id") or f"item-{index}")
+        name = str(raw.get("name") or "").strip()
+
+        if not name:
+            raise ValueError(f"O item {index} esta sem nome.")
+        if item_id in seen_ids:
+            raise ValueError(f"ID duplicado: {item_id}")
+
+        seen_ids.add(item_id)
+
+        try:
+            weight = int(raw.get("weight"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"O peso do item '{name}' e invalido.") from exc
+
+        try:
+            value = int(raw.get("value"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"O valor do item '{name}' e invalido.") from exc
+
+        if weight <= 0:
+            raise ValueError(f"O peso do item '{name}' precisa ser maior que zero.")
+        if value < 0:
+            raise ValueError(f"O valor do item '{name}' nao pode ser negativo.")
+
+        items.append(KnapsackItem(id=item_id, name=name, weight=weight, value=value))
+
+    return items
+
+
+def serialize_knapsack_item(item: KnapsackItem) -> dict[str, Any]:
+    return asdict(item)
+
+
+def knapsack_iterative(
+    items: list[KnapsackItem],
+    capacity: int,
+) -> tuple[int, int, list[KnapsackItem], list[dict[str, Any]]]:
+    count = len(items)
+    dp = [[0] * (capacity + 1) for _ in range(count + 1)]
+    table: list[dict[str, Any]] = [
+        {"i": 0, "item": "Base", "weight": 0, "value": 0, "values": dp[0][:]}
+    ]
+
+    for i in range(1, count + 1):
+        item = items[i - 1]
+        for current_capacity in range(capacity + 1):
+            if item.weight > current_capacity:
+                dp[i][current_capacity] = dp[i - 1][current_capacity]
+            else:
+                include_value = item.value + dp[i - 1][current_capacity - item.weight]
+                exclude_value = dp[i - 1][current_capacity]
+                dp[i][current_capacity] = max(include_value, exclude_value)
+
+        table.append(
+            {
+                "i": i,
+                "item": item.name,
+                "weight": item.weight,
+                "value": item.value,
+                "values": dp[i][:],
+            }
+        )
+
+    selected: list[KnapsackItem] = []
+    current_capacity = capacity
+
+    for i in range(count, 0, -1):
+        if dp[i][current_capacity] != dp[i - 1][current_capacity]:
+            item = items[i - 1]
+            selected.append(item)
+            current_capacity -= item.weight
+
+    selected.reverse()
+    total_weight = sum(item.weight for item in selected)
+    return dp[count][capacity], total_weight, selected, table
+
+
+def optimize_knapsack(raw_items: list[dict[str, Any]], capacity_value: Any) -> dict[str, Any]:
+    items = validate_knapsack_items(raw_items)
+
+    try:
+        capacity = int(capacity_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("A capacidade precisa ser um numero inteiro.") from exc
+
+    if capacity <= 0:
+        raise ValueError("A capacidade precisa ser maior que zero.")
+
+    total_value, total_weight, selected, table = knapsack_iterative(items, capacity)
+
+    return {
+        "capacity": capacity,
+        "items": [serialize_knapsack_item(item) for item in items],
+        "iterative": {
+            "totalValue": total_value,
+            "totalWeight": total_weight,
+            "selected": [serialize_knapsack_item(item) for item in selected],
+            "dpTable": table,
+        },
+    }
+
+
 class ScheduleRequestHandler(BaseHTTPRequestHandler):
     server_version = "AgendaDP/1.0"
 
@@ -233,14 +352,18 @@ class ScheduleRequestHandler(BaseHTTPRequestHandler):
         self.serve_static_file(requested)
 
     def do_POST(self) -> None:
-        if urlparse(self.path).path != "/api/optimize":
+        path = urlparse(self.path).path
+        if path not in {"/api/optimize", "/api/knapsack"}:
             self.send_error(404)
             return
 
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length) or b"{}")
-            result = optimize_schedule(payload.get("activities", []))
+            if path == "/api/optimize":
+                result = optimize_schedule(payload.get("activities", []))
+            else:
+                result = optimize_knapsack(payload.get("items", []), payload.get("capacity"))
         except ValueError as exc:
             self.send_json({"error": str(exc)}, status=400)
             return

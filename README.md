@@ -1,15 +1,22 @@
-# Otimizador de Agenda com Programação Dinâmica
+# Laboratório de Programação Dinâmica
 
-Projeto em Python com front web para resolver o problema de **Weighted Interval Scheduling**.
+Projeto em Python com front web para resolver dois problemas clássicos de programação dinâmica:
+
+- **Weighted Interval Scheduling**, na aba de agenda;
+- **Knapsack 0/1**, na aba de mochila.
 
 O usuário cadastra atividades com horário de início, horário de fim e peso. O sistema escolhe a melhor agenda possível sem sobreposição de horários, maximizando o peso total.
 
+Na aba de knapsack, o usuário cadastra itens com peso e valor, além da capacidade máxima da mochila. O sistema escolhe a combinação que maximiza o valor total sem ultrapassar a capacidade.
+
 ## Algoritmo usado
 
-O projeto implementa programação dinâmica em duas versões:
+O projeto implementa programação dinâmica em duas versões para a agenda:
 
 - **Iterativa**, usando tabela `M[i]`;
 - **Recursiva com memoização**, para comparar o resultado com a versão iterativa.
+
+Para o knapsack, a solução é implementada com a tabela iterativa clássica `V[i][c]`, onde `i` representa os itens considerados e `c` a capacidade disponível.
 
 Para cada atividade `i`, o algoritmo calcula:
 
